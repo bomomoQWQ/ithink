@@ -61,6 +61,8 @@ async function startHost() {
     browser = await chromium.launch({ executablePath: process.env.ITHINK_BROWSER || "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", headless: true });
     const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, locale: "zh-CN" });
     page = await context.newPage(); page.on("pageerror", error => errors.push(error.message));
+    const openSessions = async () => { if (await page.locator("#sessions-popover").isHidden()) await page.locator("#sessions-button").click(); };
+    const pickConversation = async (id) => { await openSessions(); await page.locator(`#conversation-list [data-conversation-id='${id}']`).click(); };
     const network = await context.newCDPSession(page); await network.send("Network.enable");
     const navigation = [];
     network.on("Network.requestWillBeSentExtraInfo", event => navigation.push(Object.fromEntries(Object.entries(event.headers).map(([key, value]) => [key.toLowerCase(), value]))));
@@ -73,7 +75,7 @@ async function startHost() {
     await page.locator("#api-model").fill("local-test-model"); await page.locator("#api-key").fill(SECRET);
     await page.locator("#test-connection").click();
     await page.waitForFunction(() => !document.querySelector("#test-connection")?.disabled && !document.querySelector("#settings-feedback")?.hidden);
-    assert.match(await page.locator("#settings-feedback").innerText(), /成功|连通/);
+    assert.match(await page.locator("#settings-feedback").innerText(), /连上了|成功/);
     assert.equal(await page.locator("#api-key").inputValue(), "");
     assert.equal(requests[0].authorization, `Bearer ${SECRET}`); assert.ok(requests[0].body.max_tokens <= 32);
     await page.locator("#api-key").fill(SECRET); await page.locator("#save-settings").click();
@@ -83,7 +85,7 @@ async function startHost() {
 
     await page.locator("#prompt").fill("帮我计算 17 + 25"); await page.locator("#prompt").press("Enter");
     await page.locator(".assistant-answer").filter({ hasText: "计算结果：42" }).waitFor();
-    assert.equal(await page.locator(".process-details").first().getAttribute("open"), null);
+    assert.equal(await page.locator(".tool-head").first().getAttribute("aria-expanded"), "false");
     const firstState = await (await page.request.get(`${host.url}/api/state`)).json();
     const conversationId = firstState.conversations[0].id;
     assert.equal(firstState.conversations[0].turns[0].state, "completed");
@@ -94,7 +96,7 @@ async function startHost() {
     await page.locator(".assistant-answer").filter({ hasText: "本对话用户消息数 2" }).waitFor();
     assert.equal(await page.locator(".chat-turn").count(), 2);
 
-    await page.locator("#prompt").fill("未发送的草稿"); await page.locator("#new-conversation").click();
+    await page.locator("#prompt").fill("未发送的草稿"); await openSessions(); await page.locator("#new-conversation").click();
     await page.waitForFunction(id => document.querySelector(`#conversation-list [data-conversation-id='${id}']`)?.getAttribute("aria-current") !== "page", conversationId);
     assert.equal(await page.locator("#prompt").inputValue(), "未发送的草稿");
     await page.locator("#prompt").fill("保持等待"); await page.locator("#prompt").press("Enter"); await page.locator("#stop-button").waitFor({ state: "visible" });
@@ -106,7 +108,7 @@ async function startHost() {
     await page.locator("#prompt").fill("停止后正常发送"); await page.locator("#prompt").press("Enter");
     await page.locator(".assistant-answer").filter({ hasText: "本对话用户消息数 1" }).waitFor();
 
-    await page.locator(`#conversation-list [data-conversation-id='${conversationId}']`).click();
+    await pickConversation(conversationId);
     assert.equal(await page.locator("#prompt").inputValue(), "未发送的草稿");
     await page.locator("#prompt").fill("制造错误"); await page.locator("#prompt").press("Enter");
     await page.locator(".message-state").filter({ hasText: "执行失败" }).waitFor();
@@ -122,7 +124,7 @@ async function startHost() {
 
     // Check literal rendering, never HTML execution, then leave a clean
     // successful turn at the bottom for visual inspection.
-    await page.locator(`#conversation-list [data-conversation-id='${conversationId}']`).click();
+    await pickConversation(conversationId);
     await page.locator("#prompt").fill('<img src=x onerror="window.ithinkXss=true">'); await page.locator("#prompt").press("Enter");
     await page.locator(".assistant-answer").filter({hasText:'<img src=x'}).waitFor();
     assert.equal(await page.locator("#chat-timeline img").count(),0); assert.equal(await page.evaluate(()=>window.ithinkXss),undefined);
@@ -132,7 +134,7 @@ async function startHost() {
     await page.screenshot({ path: path.join(output, "chat-desktop.png"), fullPage: true });
     await page.locator("#settings-button").click(); await page.screenshot({ path: path.join(output, "chat-settings.png"), fullPage: true }); await page.locator("#settings-cancel").click();
     await page.setViewportSize({ width: 390, height: 844 }); assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), true);
-    await page.locator("#sidebar-toggle").click(); await page.locator("#sidebar-close").click();
+    await openSessions(); await page.locator("#popover-backdrop").click();
     await page.screenshot({ path: path.join(output, "chat-mobile.png"), fullPage: true });
     assert.deepEqual(errors, []);
     console.log(JSON.stringify({ ok: true, tests: ["external navigation", "unconfigured guidance", "real mock API probe/auth", "settings save/key privacy", "tool call/result", "multi-turn history", "new conversation/drafts", "cancel", "errors", "reload", "reconnect", "mobile"], api_calls: requests.length, screenshots: output }));
