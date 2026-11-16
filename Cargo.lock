@@ -445,6 +445,7 @@ version = "0.1.0"
 dependencies = [
  "ithink-core",
  "serde_json",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

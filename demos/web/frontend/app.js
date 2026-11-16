@@ -17,7 +17,7 @@
     dialog: $("settings-dialog"), settingsForm: $("settings-form"), settingsClose: $("settings-close"), settingsCancel: $("settings-cancel"),
     mode: $("provider-mode"), apiSettings: $("api-settings"), offlineSettings: $("offline-settings-note"), endpoint: $("api-endpoint"), modelInput: $("api-model"),
     key: $("api-key"), keyStatus: $("key-status"), keyHint: $("key-hint"), clearKey: $("clear-api-key"), systemPrompt: $("system-prompt"),
-    thinkingMode: $("thinking-mode"), reasoningEffort: $("reasoning-effort"), topP: $("top-p"), stop: $("stop-sequences"), responseFormat: $("response-format"), safety: $("safety-check"),
+    thinkingMode: $("thinking-mode"), reasoningEffort: $("reasoning-effort"), topP: $("top-p"), stopSequences: $("stop-sequences"), responseFormat: $("response-format"), safety: $("safety-check"),
     temperature: $("temperature"), maxTokens: $("max-tokens"), timeout: $("timeout-secs"), feedback: $("settings-feedback"),
     save: $("save-settings"), saveLabel: $("save-label"), test: $("test-connection"), testLabel: $("test-label")
   };
@@ -490,7 +490,7 @@
   function setSettingsBusy(busy, action = "") {
     settingsBusy = busy;
     const disabled = busy || settingsLoading;
-    for (const input of [el.mode, el.endpoint, el.modelInput, el.key, el.clearKey, el.systemPrompt, el.temperature, el.topP, el.maxTokens, el.stop, el.responseFormat, el.thinkingMode, el.reasoningEffort, el.safety, el.timeout]) input.disabled = disabled;
+    for (const input of [el.mode, el.endpoint, el.modelInput, el.key, el.clearKey, el.systemPrompt, el.temperature, el.topP, el.maxTokens, el.stopSequences, el.responseFormat, el.thinkingMode, el.reasoningEffort, el.safety, el.timeout]) input.disabled = disabled;
     el.save.disabled = disabled; el.test.disabled = disabled;
     el.settingsClose.disabled = busy; el.settingsCancel.disabled = busy;
     el.save.classList.toggle("is-loading", busy && action === "save"); el.test.classList.toggle("is-loading", busy && action === "test");
@@ -509,7 +509,7 @@
     el.reasoningEffort.value = config.reasoning_effort || "";
     el.topP.value = config.top_p === null ? "" : String(config.top_p);
     el.maxTokens.value = config.max_tokens === null ? "" : String(config.max_tokens);
-    el.stop.value = config.stop.join("\n");
+    el.stopSequences.value = config.stop.join("\n");
     el.responseFormat.value = config.response_format;
     el.safety.checked = config.safety_check;
     el.temperature.value = config.temperature === null ? "" : String(config.temperature);
@@ -546,7 +546,7 @@
     const topP = el.topP.value.trim() === "" ? null : Number(el.topP.value);
     const maxTokens = el.maxTokens.value.trim() === "" ? null : Number(el.maxTokens.value);
     const timeout = Number(el.timeout.value);
-    const stop = el.stop.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
+    const stop = el.stopSequences.value.split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
     const thinking = el.thinkingMode.value;
     const reasoning = thinking === "disabled" || !el.reasoningEffort.value ? null : el.reasoningEffort.value;
     const responseFormat = el.responseFormat.value;

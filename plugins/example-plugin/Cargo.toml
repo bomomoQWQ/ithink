@@ -11,3 +11,7 @@ description = "Example user-space process plugin and fault fixtures"
 [dependencies]
 ithink.workspace = true
 serde_json.workspace = true
+
+# process_plugins.rs opens the grandchild PID handle to verify Job Object cleanup.
+[target.'cfg(windows)'.dev-dependencies]
+windows-sys.workspace = true
