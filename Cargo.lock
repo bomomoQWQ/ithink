@@ -421,14 +421,66 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "791930b43c0d5973160d90a8f3894509f2b273430f5c5c73b668636d0287c5c0"
 
 [[package]]
-name = "ithink-kernel"
+name = "ithink-core"
 version = "0.1.0"
 dependencies = [
- "ctrlc",
  "reqwest",
  "serde",
  "serde_json",
  "tokio",
+ "windows-sys 0.61.2",
+]
+
+[[package]]
+name = "ithink-demo"
+version = "0.1.0"
+dependencies = [
+ "ithink-core",
+ "serde_json",
+]
+
+[[package]]
+name = "ithink-example-plugin"
+version = "0.1.0"
+dependencies = [
+ "ithink-core",
+ "serde_json",
+]
+
+[[package]]
+name = "ithink-loop-demo"
+version = "0.1.0"
+dependencies = [
+ "ithink-core",
+ "serde_json",
+]
+
+[[package]]
+name = "ithink-loop-fixture"
+version = "0.1.0"
+dependencies = [
+ "ithink-core",
+ "serde_json",
+]
+
+[[package]]
+name = "ithink-model-provider"
+version = "0.1.0"
+dependencies = [
+ "ithink-core",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "ithink-web"
+version = "0.1.0"
+dependencies = [
+ "ctrlc",
+ "ithink-core",
+ "reqwest",
+ "serde",
+ "serde_json",
  "windows-sys 0.61.2",
 ]
 

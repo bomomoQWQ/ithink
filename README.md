@@ -1,13 +1,13 @@
 # 俺寻思🤔 · I`think🤔
 
-一个独立、内核式的 Agent harness。**轻、快、模块化；内核提供机制，用户态决定策略。** 代码标识使用 `ithink`，包名暂为 `ithink-kernel`，尚未发布到包仓库。
+一个独立、内核式的 Agent harness。**轻、快、模块化；内核提供机制，用户态决定策略。** 代码标识使用 `ithink`，核心包名为 `ithink-core`（库名 `ithink`），尚未发布到包仓库。
 
 ## 关于
 
 - **名字**：「俺寻思🤔」/ ``I`think``，代码标识 `ithink`。一句口语，意思是先想清楚再动手。
 - **是什么**：一个可独立运行的 Agent harness。内核只提供通信调度、主体与权限、任务、上下文四类机制；模型适配、会话、工具与编排策略留在用户态，插件是独立进程。
 - **不是什么**：不是又一个封闭的 Agent 产品，不是模型厂商 SDK，不是安全沙箱，也还不是生产框架——目前是 0.1 原型。
-- **先看哪个**：`cargo run --bin ithink-demo` 看机制内核与进程热替换；`cargo run --features web --bin ithink-web` 起本机 Agent 工作台，在设置里填 OpenAI 兼容端点即可真实对话。
+- **先看哪个**：先 `cargo build --workspace --bins`，再用 `cargo run -p ithink-demo` 看机制内核与进程热替换；`cargo run -p ithink-web -- --port 4173` 起本机 Agent 工作台，在设置里填 OpenAI 兼容端点即可真实对话。
 - **许可**：AGPL-3.0-or-later，见 [LICENSE](LICENSE)。
 
 ## 当前状态
@@ -23,21 +23,20 @@
 | 插件装载 | 独立进程、版本握手、依赖检查、运行时加载/替换/卸载，失败保留旧实例 |
 | 系统桥 | 宿主按服务/操作授予能力，后端由插件提供，原生结果/错误原样封装返回 |
 | Agent Loop（用户态） | 模型 → 工具 → 结果回写 → 继续/结束；多任务驱动、取消、步数限制、压缩暂停与恢复 |
-| Web 工作台（可选宿主） | 侧栏会话、多轮聊天、输入/停止、折叠工具过程；配置端点/模型/密钥、真实连接测试与 API 调用 |
+| Web 工作台（可选宿主） | 侧栏会话、多轮聊天、输入/停止、SSE 流式回答与推理、折叠工具过程；配置端点/模型/密钥、DeepSeek 思考模式与采样参数、真实连接测试与 API 调用 |
 
 ## 开始运行
 
 通用 Rust 环境（1.85 或更新）：
 
 ```sh
-cargo test --all-targets
-cargo build --bins
-cargo run --bin ithink-demo
-cargo run --bin ithink-loop-demo
+cargo test --workspace --all-targets --all-features
+cargo build --workspace --bins
+cargo run -p ithink-demo
+cargo run -p ithink-loop-demo
 
 # 可选 Agent 工作台：http://127.0.0.1:4173
-cargo build --features web --bins
-cargo run --features web --bin ithink-web
+cargo run -p ithink-web -- --port 4173
 ```
 
 本工作区已装有**项目局部** Rust 工具链，没有修改系统 PATH。在 Windows 上可直接：
@@ -68,29 +67,34 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\dev.ps1 demo
 ## 结构
 
 ```text
-src/
-  api.rs             公共类型与请求
-  kernel.rs          三个部件的状态机、权限、系统请求路由
-  context.rs         上下文原文日志、活动视图、替换与回放
-  protocol.rs        有大小限制的逐行 JSON 协议
-  plugin.rs          内核启动插件与握手
-  runtime.rs         事件循环、热加载、宿主 API
-  process_tree.rs    Windows Job / Unix 进程组清理
-  sdk.rs             只使用公开协议的有界轮询 Rust 插件客户端
-  agent_loop.rs      可替换的用户态模型/工具循环状态机
-  loop_plugin.rs     同一插件内多任务循环驱动
-  web_host.rs        可选会话/聊天宿主，不是内核模块
-  web_settings.rs    主机模型配置；持久化非密钥参数
-  openai.rs          可选 OpenAI 兼容 Chat Completions 适配器
-  bin/               演示宿主和用户态示例插件
- tests/
-  process_plugins.rs 真正启动独立进程的内核集成测试
-  agent_loop.rs      循环状态机与真实上下文回归测试
-  agent_loop_process.rs 模型/工具/循环进程端到端测试
-  web_host.rs        本机 HTTP 与任务 API 回归测试
-  chat_api.rs        真实模型进程与本机 mock API 回归
-  web_smoke.cjs      隔离宿主+mock API 的真实浏览器测试
-web/                 无框架 Agent 聊天工作界面
+ithink-core/                核心包（库名 ithink）
+  src/kernel/               机制内核区
+    api.rs                  公共类型与请求
+    state.rs                三个部件的状态机、权限、系统请求路由
+    context.rs              上下文原文日志、活动视图、替换与回放
+    protocol.rs             有大小限制的逐行 JSON 协议
+    sdk.rs                  只使用公开协议的有界轮询 Rust 插件客户端
+    plugin.rs               内核启动插件与握手
+    runtime.rs              事件循环、热加载、宿主 API
+    process_tree.rs         Windows Job / Unix 进程组清理
+  src/userland/             附属/用户态区（可替换策略）
+    agent_loop.rs           可替换的模型/工具循环状态机
+    loop_plugin.rs          同一插件内多任务循环驱动
+    openai.rs               可选 OpenAI 兼容 Chat Completions 适配器
+  tests/agent_loop.rs       循环状态机与真实上下文回归测试
+plugins/
+  example-plugin/           示例插件与故障 fixture
+  loop-fixture/             离线模型、加法工具与循环插件
+  model-provider/           真实 OpenAI 兼容模型进程
+demos/
+  kernel-demo/              机制内核与进程热替换演示
+  loop-demo/                离线 Agent Loop 端到端演示
+  web/                      可选本机 Agent 工作台
+    src/                    HTTP 入口、聊天宿主、设置管理
+    frontend/               无框架 Agent 聊天界面
+    tests/                  HTTP/聊天/真实浏览器测试
+design/                     设计与验证文档
+Cargo.toml                  workspace 清单
 ```
 
 - [设计草案（历史讨论，已修正适用范围）](<design/内核草案.md>)
@@ -107,7 +111,7 @@ web/                 无框架 Agent 聊天工作界面
 3. **取消是协作式。** 任务结束会使关联待办请求失败，并通知后端取消；已发生的系统副作用不可回滚。无任务绑定的系统调用不会因为任意任务结束而被取消。
 4. **热替换不自动迁移进程内状态。** 新实例获得新 AID；旧实例待办请求明确失败。新实例完成握手之后仍可能再次崩溃，握手不是永久健康保证。
 5. **日志目前在内存中。** 单个上下文日志可序列化并确定回放，但还没有整个内核的磁盘恢复、日志轮换或常驻主代理自动重启。
-6. 已在本机 Windows x64 测试。Unix 有条件编译实现，尚未在本机执行；冷启动、常驻内存和大规模负载仍需独立基准测试。
+6. 已在本机 Windows x64 与 Linux x86_64 测试。Unix 分支本次已实际执行；冷启动、常驻内存和大规模负载仍需独立基准测试。
 7. **许可证为 AGPL-3.0-or-later。** 见 [LICENSE](LICENSE)。它要求通过网络提供修改版服务时向用户提供对应源码；具体合规责任在部署方。Cargo 仍设置 `publish = false`，尚未发布到包仓库。
 
 ## 许可证

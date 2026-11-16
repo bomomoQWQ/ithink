@@ -1,0 +1,26 @@
+[package]
+name = "ithink-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Mechanism-only Agent harness core: kernel, plugin protocol, and userland libraries"
+
+[lib]
+name = "ithink"
+path = "src/lib.rs"
+
+[features]
+default = []
+openai = ["dep:reqwest", "dep:tokio"]
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+reqwest = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys.workspace = true

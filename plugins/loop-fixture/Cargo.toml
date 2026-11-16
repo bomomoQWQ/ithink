@@ -1,0 +1,13 @@
+[package]
+name = "ithink-loop-fixture"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Offline model, tool, and Agent Loop process fixture"
+
+[dependencies]
+ithink.workspace = true
+serde_json.workspace = true

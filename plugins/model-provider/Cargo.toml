@@ -1,0 +1,14 @@
+[package]
+name = "ithink-model-provider"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "OpenAI-compatible model provider process"
+
+[dependencies]
+ithink = { workspace = true, features = ["openai"] }
+serde_json.workspace = true
+tokio.workspace = true

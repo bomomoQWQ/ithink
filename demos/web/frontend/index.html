@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="俺寻思，一个轻量、模块化的本地 Agent 工作空间。">
+  <title>俺寻思🤔 · I`think</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#prompt">跳到消息输入</a>
+  <button id="sidebar-backdrop" class="sidebar-backdrop" type="button" aria-label="关闭会话侧栏" hidden></button>
+  <aside id="sidebar" class="sidebar" aria-label="会话导航">
+    <div class="sidebar-brand"><a class="brand" href="/" aria-label="俺寻思首页"><span class="brand-mark" aria-hidden="true">i</span><span><strong>俺寻思<span class="brand-emoji">🤔</span></strong><span class="brand-subtitle">I`think</span></span></a><button id="sidebar-close" class="icon-button mobile-only" type="button" aria-label="关闭侧栏">×</button></div>
+    <button id="new-conversation" class="new-conversation" type="button"><span aria-hidden="true">＋</span><span>新对话</span><kbd>Ctrl K</kbd></button>
+    <div class="sidebar-section-heading"><span>对话</span><span id="conversation-count">0</span></div>
+    <nav class="conversation-nav" aria-label="对话列表"><p id="conversations-empty" class="sidebar-empty">你的对话会出现在这里。</p><ul id="conversation-list" class="conversation-list"></ul></nav>
+    <div class="sidebar-bottom"><button id="settings-button" class="settings-button" type="button"><span class="settings-glyph" aria-hidden="true">⚙</span><span>设置</span><span id="settings-hint" class="settings-hint">配置模型</span></button><div class="sidebar-footer"><span class="status-dot" aria-hidden="true"></span><span>本地运行 · 你的工作空间</span></div></div>
+  </aside>
+
+  <main id="workspace" class="workspace">
+    <header class="workspace-header">
+      <div class="header-left"><button id="sidebar-toggle" class="icon-button mobile-only" type="button" aria-label="打开会话侧栏" aria-controls="sidebar" aria-expanded="false">☰</button><span id="conversation-title" class="conversation-title">新对话</span></div>
+      <div class="header-right"><button id="model-button" class="model-button" type="button" aria-label="打开模型设置"><span class="model-symbol" aria-hidden="true">◇</span><span id="current-model">配置模型</span><span class="model-chevron" aria-hidden="true">⌄</span></button><span id="offline-badge" class="mode-badge" hidden>演示模式</span><span id="connection-status" class="connection-status is-connecting" role="status"><span class="status-dot" aria-hidden="true"></span><span id="connection-text">正在连接</span></span></div>
+    </header>
+
+    <div id="connection-error" class="connection-banner" role="alert" hidden><span id="connection-error-message">连接中断，正在重试。</span><button id="retry-button" class="text-button" type="button">立即重试</button></div>
+
+    <section id="chat-scroll" class="chat-scroll" aria-label="聊天记录">
+      <div id="welcome" class="welcome">
+        <div class="welcome-symbol" aria-hidden="true">🤔</div>
+        <p class="welcome-eyebrow">I`THINK WORKSPACE</p>
+        <h1 id="welcome-title">你在想什么？</h1>
+        <p id="welcome-copy" class="welcome-copy">把问题留在这里，让 Agent 帮你一起完成。</p>
+        <button id="configure-button" class="button button-primary" type="button" hidden>配置模型，开始对话 <span aria-hidden="true">↗</span></button>
+        <div id="suggestions" class="suggestions" hidden><button type="button" data-prompt="帮我计算 17 + 25"><span aria-hidden="true">＋</span><span>试一下加法工具</span></button><button type="button" data-prompt="你好，介绍一下你自己"><span aria-hidden="true">◇</span><span>开始一段对话</span></button></div>
+        <p id="welcome-note" class="welcome-note"></p>
+      </div>
+      <div id="chat-timeline" class="chat-timeline" role="log" aria-label="消息时间线"></div>
+      <div id="scroll-anchor" class="scroll-anchor" aria-hidden="true"></div>
+    </section>
+
+    <div class="composer-region">
+      <button id="jump-bottom" class="jump-bottom" type="button" aria-label="滚动到最新消息" hidden>↓ <span>最新消息</span></button>
+      <div class="composer-width">
+        <p id="action-error" class="action-error" role="alert" hidden></p>
+        <form id="message-form" class="composer">
+          <label for="prompt" class="visually-hidden">消息</label>
+          <textarea id="prompt" name="content" rows="3" placeholder="发送消息，或描述一项任务…" maxlength="4000" autocomplete="off"></textarea>
+          <div class="composer-toolbar"><div class="composer-info"><span class="composer-tool-dot" aria-hidden="true"></span><span id="composer-status">准备就绪</span><span id="input-count" class="input-count">0 / 2000</span></div><div class="composer-actions"><span class="composer-shortcut">Enter 发送 · Shift Enter 换行</span><button id="stop-button" class="stop-button" type="button" hidden><span aria-hidden="true">■</span><span id="stop-label">停止</span></button><button id="send-button" class="send-button" type="submit" aria-label="发送消息"><span id="send-icon" aria-hidden="true">↑</span><span class="send-label">发送</span></button></div></div>
+        </form>
+        <div class="composer-footnote"><span id="mode-note">回答由所选模型生成，请核实重要信息。</span><span class="tool-note">工具：add · 加法</span></div>
+      </div>
+    </div>
+  </main>
+
+  <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
+    <form id="settings-form" novalidate>
+      <header class="dialog-header"><div><p class="dialog-eyebrow">WORKSPACE SETTINGS</p><h2 id="settings-title">模型设置</h2></div><button id="settings-close" class="icon-button" type="button" aria-label="关闭设置">×</button></header>
+      <div class="dialog-body">
+        <p class="settings-intro">默认对接 DeepSeek Chat Completions，也兼容其他 OpenAI 风格服务，或手动切换到离线演示。</p>
+        <div class="setting-field"><label for="provider-mode">运行模式</label><select id="provider-mode" name="mode"><option value="api">API 模型</option><option value="offline">离线演示（假模型）</option></select></div>
+        <div id="api-settings">
+          <div class="setting-field"><label for="api-endpoint">API Endpoint</label><input id="api-endpoint" name="endpoint" type="url" placeholder="https://api.deepseek.com" autocomplete="off" spellcheck="false"><p class="field-hint">DeepSeek 基地址为 https://api.deepseek.com；也可填写完整的 /chat/completions 地址。更换站点或端口后，请为新端点重新填写密钥。</p></div>
+          <div class="setting-field"><label for="api-model">模型名称</label><input id="api-model" name="model" type="text" list="api-model-presets" placeholder="例如 deepseek-flash" autocomplete="off" spellcheck="false"><datalist id="api-model-presets"><option value="deepseek-flash">DeepSeek-V4.1-Flash-1017 · 1M 上下文 · 最大 384K 输出</option><option value="deepseek-v4-pro">DeepSeek-V4-Pro-0813 · 1M 上下文 · 最大 384K 输出</option></datalist><p class="field-hint">当前文档模型：deepseek-flash（默认，支持图像输入）或 deepseek-v4-pro。也可填写其他兼容服务的模型名。</p></div>
+          <div class="setting-field"><div class="label-row"><label for="api-key">API Key</label><span id="key-status" class="field-status">尚未设置</span></div><input id="api-key" name="api_key" type="password" placeholder="输入新的 API Key" autocomplete="new-password" spellcheck="false"><p id="key-hint" class="field-hint">密钥只保存在当前服务内存，重启后需要重新填写。</p><label class="checkbox-field"><input id="clear-api-key" type="checkbox"><span>清除已保存的密钥</span></label></div>
+          <div class="setting-field"><label for="thinking-mode">思考模式</label><select id="thinking-mode" name="thinking"><option value="auto">自动（服务端默认，默认开启）</option><option value="enabled">开启</option><option value="disabled">关闭</option></select><p class="field-hint">DeepSeek 扩展参数；自动时不发送该字段。其他兼容服务建议保持自动。</p></div>
+          <div class="setting-field"><label for="reasoning-effort">思考强度</label><select id="reasoning-effort" name="reasoning_effort"><option value="">默认（high）</option><option value="low">low</option><option value="high">high</option><option value="max">max</option></select><p class="field-hint">仅在思考模式下生效；关闭思考时会被忽略。</p></div>
+        </div>
+        <div id="offline-settings-note" class="offline-settings-note" hidden><strong>离线演示不是真实大模型。</strong><p>使用本地假模型验证工作流，不产生 API 费用。当前示例工具仅支持整数加法。</p></div>
+        <div class="setting-field"><label for="system-prompt">系统提示</label><textarea id="system-prompt" name="system_prompt" rows="3" placeholder="可选：定义 Agent 的工作方式"></textarea></div>
+        <details id="advanced-settings" class="advanced-settings"><summary>高级参数</summary><div class="advanced-fields"><div class="setting-field"><label for="temperature">Temperature</label><input id="temperature" name="temperature" type="number" min="0" max="2" step="0.1" placeholder="使用模型默认值"><p class="field-hint">0–2；思考模式下不生效。</p></div><div class="setting-field"><label for="top-p">Top P</label><input id="top-p" name="top_p" type="number" min="0.01" max="1" step="0.01" placeholder="使用模型默认值"><p class="field-hint">大于 0 且不超过 1；DeepSeek 各模型生效规则不同。</p></div><div class="setting-field"><label for="max-tokens">最大输出 Tokens</label><input id="max-tokens" name="max_tokens" type="number" min="1" max="393216" step="1" placeholder="服务端默认"><p class="field-hint">留空使用服务端默认（DeepSeek：非思考 8K / 思考 64K）。</p></div><div class="setting-field"><label for="timeout-secs">超时（秒）</label><input id="timeout-secs" name="timeout_secs" type="number" min="1" max="120" step="1"></div><div class="setting-field"><label for="response-format">输出格式</label><select id="response-format" name="response_format"><option value="text">普通文本</option><option value="json_object">JSON 对象</option></select><p class="field-hint">JSON 模式仍需要在系统提示中要求输出 JSON。</p></div><div class="setting-field"><label class="checkbox-field"><input id="safety-check" type="checkbox"><span>基础风控 high</span></label><p class="field-hint">DeepSeek 扩展；开启后审核输入与输出。</p></div><div class="setting-field field-span"><label for="stop-sequences">停止序列</label><textarea id="stop-sequences" name="stop" rows="2" placeholder="每行一个，最多 16 个"></textarea><p class="field-hint">遇到任一序列时停止生成；留空不启用。</p></div></div></details>
+        <p class="settings-storage-note"><span aria-hidden="true">⌑</span><span>Endpoint、模型及非敏感参数会保存在本地。API Key 仅保存在内存，不写入浏览器存储，重启服务后失效。</span></p>
+        <div id="settings-feedback" class="settings-feedback" role="status" aria-live="polite" hidden></div>
+      </div>
+      <footer class="dialog-footer"><div class="test-area"><button id="test-connection" class="button button-secondary" type="button"><span class="button-spinner" aria-hidden="true"></span><span id="test-label">测试连接</span></button><span class="test-cost-note">API 模式会发起最小真实调用，可能产生少量费用。</span></div><div class="dialog-footer-actions"><button id="settings-cancel" class="button button-quiet" type="button">取消</button><button id="save-settings" class="button button-primary" type="submit"><span class="button-spinner" aria-hidden="true"></span><span id="save-label">保存并应用</span></button></div></footer>
+    </form>
+  </dialog>
+  <div id="announcer" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>

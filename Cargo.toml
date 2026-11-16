@@ -1,56 +1,21 @@
-[package]
-name = "ithink-kernel"
+[workspace]
+resolver = "3"
+members = ["ithink-core", "plugins/*", "demos/*"]
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
-publish = false
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/bomomoQWQ/ithink"
-description = "A small mechanism-only harness kernel with process plugins"
 
-[lib]
-name = "ithink"
-path = "src/lib.rs"
-
-[[bin]]
-name = "ithink-demo"
-path = "src/bin/demo.rs"
-
-[[bin]]
-name = "ithink-example-plugin"
-path = "src/bin/example_plugin.rs"
-
-[[bin]]
-name = "ithink-loop-demo"
-path = "src/bin/loop_demo.rs"
-
-[[bin]]
-name = "ithink-loop-fixture"
-path = "src/bin/loop_fixture.rs"
-
-[[bin]]
-name = "ithink-web"
-path = "src/bin/web.rs"
-required-features = ["web"]
-
-[[bin]]
-name = "ithink-model-provider"
-path = "src/bin/model_provider.rs"
-required-features = ["openai"]
-
-[features]
-default = []
-web = ["dep:ctrlc", "openai"]
-openai = ["dep:reqwest", "dep:tokio"]
-
-[dependencies]
-ctrlc = { version = "3", optional = true }
-reqwest = { version = "0.12", optional = true, default-features = false, features = ["blocking", "json", "rustls-tls"] }
-tokio = { version = "1", optional = true, features = ["rt-multi-thread", "time", "net", "sync"] }
+[workspace.dependencies]
+ithink = { package = "ithink-core", path = "ithink-core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-[target.'cfg(windows)'.dependencies]
+reqwest = { version = "0.12", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+tokio = { version = "1", features = ["rt-multi-thread", "time", "net", "sync"] }
+ctrlc = "3"
 windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_JobObjects", "Win32_System_Threading", "Win32_System_IO", "Win32_Security", "Win32_Storage_FileSystem"] }
 
 [profile.release]

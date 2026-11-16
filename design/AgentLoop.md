@@ -22,11 +22,11 @@
 
 | 文件 | 职责 |
 |---|---|
-| [agent_loop.rs](<../src/agent_loop.rs>) | 纯状态机：给出下一条公开 API 请求，接收结果，推进状态；自身不执行 I/O |
-| [loop_plugin.rs](<../src/loop_plugin.rs>) | 用户态进程驱动：把多个循环的局部请求编号映射到 SDK 连接编号 |
-| [sdk.rs](<../src/sdk.rs>) | 完成握手、发送请求、后台读取帧；新增有界 `poll/take_response/take_notice` |
-| [loop_fixture.rs](<../src/bin/loop_fixture.rs>) | 假模型、加法工具与循环插件示例，全部走公开 API |
-| [loop_demo.rs](<../src/bin/loop_demo.rs>) | 启动上述进程、创建任务并打印结果 |
+| [agent_loop.rs](<../ithink-core/src/userland/agent_loop.rs>) | 纯状态机：给出下一条公开 API 请求，接收结果，推进状态；自身不执行 I/O |
+| [loop_plugin.rs](<../ithink-core/src/userland/loop_plugin.rs>) | 用户态进程驱动：把多个循环的局部请求编号映射到 SDK 连接编号 |
+| [sdk.rs](<../ithink-core/src/kernel/sdk.rs>) | 完成握手、发送请求、后台读取帧；新增有界 `poll/take_response/take_notice` |
+| [loop_fixture.rs](<../plugins/loop-fixture/src/main.rs>) | 假模型、加法工具与循环插件示例，全部走公开 API |
+| [loop_demo.rs](<../demos/loop-demo/src/main.rs>) | 启动上述进程、创建任务并打印结果 |
 
 内核增加的只是通用机制：
 
@@ -121,9 +121,9 @@
 项目目录里：
 
 ```sh
-cargo test --all-targets
-cargo build --bins
-cargo run --bin ithink-loop-demo
+cargo test --workspace --all-targets
+cargo build --workspace --bins
+cargo run -p ithink-loop-demo
 ```
 
 本工作区 Windows：
@@ -141,4 +141,4 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\dev.ps1 loop-demo
 - 工具结果真实写回、配对保留；压缩恢复不会重复执行工具。
 - 支持步数、单步工具数和条目数上限；行协议约 1 MiB，内联模型载荷更小，超大上下文应由用户态压缩/拆分。
 - SDK 只有读取转移到后台线程，写管道仍同步，因此不承诺硬实时或完全异步 I/O。
-- 尚无在线模型、token 流式展示、并行工具调度、自动重试、自动摘要或完整检查点恢复。它们可以在后端/驱动层扩展，不冒充已经实现。
+- 核心循环本身不实现模型协议或 token 流式展示；可选的 OpenAI 兼容适配器与 Web 宿主已经提供 SSE 流式展示。尚无并行工具调度、自动重试、自动摘要或完整检查点恢复。它们可以在后端/驱动层扩展，不冒充已经实现。

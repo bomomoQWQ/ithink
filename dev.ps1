@@ -17,24 +17,24 @@ try {
     $env:TEMP=$tmp
     $env:TMP=$tmp
     switch ($Action) {
-        'test' { cargo test --all-targets --all-features }
-        'check' { cargo check --all-targets --all-features }
-        'lint' { cargo clippy --all-targets --all-features -- -D warnings }
+        'test' { cargo test --workspace --all-targets --all-features }
+        'check' { cargo check --workspace --all-targets --all-features }
+        'lint' { cargo clippy --workspace --all-targets --all-features -- -D warnings }
         'fmt' { cargo fmt --all --check }
-        'build' { cargo build --bins }
-        'release' { cargo build --release --bins }
+        'build' { cargo build --workspace --bins }
+        'release' { cargo build --workspace --release --bins }
         'web' {
-            cargo build --features web --bins
+            cargo build --workspace --bins
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & (Join-Path $PSScriptRoot 'target\debug\ithink-web.exe')
         }
         'loop-demo' {
-            cargo build --bins
+            cargo build --workspace --bins
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & (Join-Path $PSScriptRoot 'target\debug\ithink-loop-demo.exe')
         }
         'demo' {
-            cargo build --bins
+            cargo build --workspace --bins
             if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
             & (Join-Path $PSScriptRoot 'target\debug\ithink-demo.exe')
         }

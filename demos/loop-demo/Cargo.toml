@@ -1,0 +1,13 @@
+[package]
+name = "ithink-loop-demo"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+description = "Offline Agent Loop end-to-end demo"
+
+[dependencies]
+ithink.workspace = true
+serde_json.workspace = true

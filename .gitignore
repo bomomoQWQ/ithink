@@ -2,3 +2,5 @@
 /.tools/
 /.ithink/
 *.log
+/.cargo-home/
+/.cargo-target/
